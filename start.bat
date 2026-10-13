@@ -50,13 +50,13 @@ echo [OK] Ports 5000 and 8085 ready.
 echo.
 
 :: -----------------------------------------------------------------------------
-:: 3. Stage 2: Start Background Services & Launch Docker Desktop
+:: 3. Stage 2: Start Real Jenkins, Flask Monitoring & Docker Desktop
 :: -----------------------------------------------------------------------------
 echo ===============================================================================
 echo [*] [STEP 2/4] STARTING SERVICES ^& LAUNCHING DOCKER DESKTOP
 echo ===============================================================================
-echo [*] 1. Starting Jenkins Web Server (Port 8085)...
-start "Jenkins Web Server (Port 8085)" /min %PY_CMD% jenkins_server.py
+echo [*] 1. Starting Official Jenkins Automation Server (Port 8085)...
+start "Official Jenkins Server (Port 8085)" /min cmd /c "run_real_jenkins.bat"
 
 echo [*] 2. Starting Flask Cloud Monitoring Web Server (Port 5000)...
 start "Cloud Monitoring Server (Port 5000)" /min %PY_CMD% app.py
@@ -64,7 +64,7 @@ start "Cloud Monitoring Server (Port 5000)" /min %PY_CMD% app.py
 echo [*] 3. Launching Docker Desktop application window...
 start "" "C:\Program Files\Docker\Docker\Docker Desktop.exe" >nul 2>&1
 
-echo [OK] All services and Docker Desktop triggered.
+echo [OK] Real Jenkins, Flask App, and Docker Desktop triggered.
 echo.
 
 :: -----------------------------------------------------------------------------
@@ -73,7 +73,7 @@ echo.
 echo ===============================================================================
 echo [*] [STEP 3/4] OPENING ALL WEB CONSOLES IN YOUR BROWSER
 echo ===============================================================================
-echo [*] Opening Jenkins CI/CD Web Pipeline UI:     http://localhost:8085
+echo [*] Opening Official Jenkins Web Pipeline UI:  http://localhost:8085
 start "" "http://localhost:8085"
 
 echo [*] Opening Live Cloud Monitoring Dashboard:    http://localhost:5000/dashboard
@@ -103,14 +103,14 @@ echo     [SUCCESS] EVERYTHING IS OPEN AND RUNNING LIVE!
 echo ===============================================================================
 echo.
 echo     ACTIVE SERVICES:
-echo       1. Jenkins CI/CD Web UI:  http://localhost:8085             (Opened in Browser)
+echo       1. Official Jenkins UI: http://localhost:8085             (Real Jenkins Server)
 echo       2. Flask Monitoring App:  http://localhost:5000/dashboard   (Opened in Browser)
 echo       3. DevOps Operations Hub: http://localhost:5000/pipeline    (Opened in Browser)
 echo       4. GitHub Repository:     https://github.com/Pavishnu-BK/.. (Opened in Browser)
 echo       5. Docker Desktop:        Active Window on your Desktop
 echo.
 echo ===============================================================================
-echo [*] All web pages and Docker Desktop are now open on your screen!
+echo [*] Real Jenkins and all web pages are now open on your screen!
 echo [*] Keep this terminal open while presenting to faculty.
 echo [*] Press any key or close this window anytime to stop all services.
 echo ===============================================================================

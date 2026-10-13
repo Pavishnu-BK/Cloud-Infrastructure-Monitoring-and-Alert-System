@@ -35,3 +35,7 @@ htmlcov/
 Thumbs.db
 ~$*
 temp_screens/
+
+# Jenkins local runtime
+jenkins.war
+.jenkins/

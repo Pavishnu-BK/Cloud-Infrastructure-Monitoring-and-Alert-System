@@ -13,12 +13,6 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     HOST=0.0.0.0 \
     DATABASE_PATH=/app/data/monitoring.db
 
-# Install system dependencies (build-essential/gcc if needed for psutil compilation)
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    gcc \
-    python3-dev \
-    && rm -rf /var/lib/apt/lists/*
-
 # Set working directory inside container
 WORKDIR /app
 
