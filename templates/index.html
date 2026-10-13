@@ -192,6 +192,160 @@
         </div>
     </div>
 
+    <!-- Monitored Infrastructure Nodes Registry (Tracked in Jenkins & Docker) -->
+    <div class="content-section" id="section-servers-fleet">
+        <div class="section-header">
+            <div class="section-title-group">
+                <div class="title-with-badge">
+                    <h2 class="section-title">Monitored Infrastructure Nodes &amp; Cluster Fleet</h2>
+                    <span class="badge badge-accent" id="fleet-count-badge">{{ servers|length if servers else 0 }} Nodes Active</span>
+                </div>
+                <span class="section-subtitle">Real-time multi-server node tracking enrolled in Jenkins CI/CD validation and Docker containerization</span>
+            </div>
+            <div class="section-actions">
+                <a href="http://localhost:8085" target="_blank" class="btn btn-jenkins btn-sm" title="Open Real Jenkins Server">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polygon points="10 8 16 12 10 16 10 8"></polygon></svg>
+                    <span>Jenkins (8085)</span>
+                </a>
+                <a href="{{ url_for('devops_pipeline') }}" class="btn btn-docker btn-sm" title="View Docker & CI/CD Telemetry">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"></path><path d="M12 12v9"></path><path d="m8 17 4 4 4-4"></path></svg>
+                    <span>CI/CD &amp; Docker Hub</span>
+                </a>
+                <button class="btn btn-primary btn-sm" id="btn-open-add-server" onclick="openAddServerModal()">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                    <span>+ Add Monitored Server</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Fleet Overview Stat Badges -->
+        <div class="fleet-kpi-bar">
+            <div class="kpi-chip">
+                <span class="kpi-chip-dot dot-green"></span>
+                <span class="kpi-chip-label">Monitored Fleet:</span>
+                <strong class="kpi-chip-val" id="kpi-fleet-total">{{ servers|length if servers else 0 }} Servers</strong>
+            </div>
+            <div class="kpi-chip">
+                <span class="kpi-chip-icon jenkins-icon-sm">J</span>
+                <span class="kpi-chip-label">Jenkins CI/CD Tracking:</span>
+                <strong class="kpi-chip-val text-jenkins">100% Enrolled (Job: Cloud-Infrastructure-Monitoring-Pipeline)</strong>
+            </div>
+            <div class="kpi-chip">
+                <span class="kpi-chip-icon docker-icon-sm">🐳</span>
+                <span class="kpi-chip-label">Docker Desktop Tracking:</span>
+                <strong class="kpi-chip-val text-docker">Active Container Node (cloud-monitor:v1.0)</strong>
+            </div>
+            <div class="kpi-chip">
+                <span class="kpi-chip-dot dot-blue"></span>
+                <span class="kpi-chip-label">Avg Ping Latency:</span>
+                <strong class="kpi-chip-val" id="kpi-fleet-latency">&lt; 1.2 ms</strong>
+            </div>
+        </div>
+
+        <div class="table-card">
+            <div class="table-responsive">
+                <table class="data-table" id="table-servers">
+                    <thead>
+                        <tr>
+                            <th>Node Name &amp; Address</th>
+                            <th>Environment</th>
+                            <th>Jenkins CI/CD Tracking</th>
+                            <th>Docker Desktop Tracking</th>
+                            <th>Live Status</th>
+                            <th>Resource Usage</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbody-servers">
+                        {% if servers %}
+                            {% for s in servers %}
+                            <tr id="server-row-{{ s.id }}">
+                                <td>
+                                    <div class="node-cell">
+                                        <div class="node-avatar">
+                                            <span class="status-pulse-dot"></span>
+                                        </div>
+                                        <div class="node-details">
+                                            <strong class="node-name" id="node-name-{{ s.id }}">{{ s.name }}</strong>
+                                            <span class="node-ip font-mono text-muted">{{ s.host }}:{{ s.port }}</span>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="badge badge-env-{{ s.environment | lower | replace(' ', '-') }}">{{ s.environment }}</span>
+                                </td>
+                                <td>
+                                    <div class="tracking-pill tracking-jenkins">
+                                        <div class="tracking-header">
+                                            <span class="tracking-badge-icon jenkins-dot">J</span>
+                                            <a href="http://localhost:8085/job/Cloud-Infrastructure-Monitoring-Pipeline/" target="_blank" class="tracking-title" title="Open Jenkins Pipeline Job">{{ s.jenkins_job }}</a>
+                                        </div>
+                                        <div class="tracking-sub">
+                                            <span class="badge-sub-status text-green">{{ s.jenkins_build_status }}</span> &bull; 
+                                            <span class="text-muted">{{ s.jenkins_test_coverage }}</span>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="tracking-pill tracking-docker">
+                                        <div class="tracking-header">
+                                            <span class="tracking-badge-icon docker-dot">🐳</span>
+                                            <span class="tracking-title">{{ s.docker_container }}</span>
+                                        </div>
+                                        <div class="tracking-sub">
+                                            <span class="badge-sub-status text-blue">{{ s.docker_status }}</span> &bull; 
+                                            <span class="text-muted font-mono">{{ s.docker_port }}</span>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="status-latency-cell">
+                                        <span class="badge badge-success" id="badge-status-{{ s.id }}">
+                                            <span class="dot-sm"></span> {{ s.status }}
+                                        </span>
+                                        <span class="latency-indicator font-mono" id="latency-{{ s.id }}">
+                                            ⚡ {{ s.latency_ms }}ms
+                                        </span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="resource-mini-bars">
+                                        <div class="mini-bar-row">
+                                            <span class="mini-label">CPU:</span>
+                                            <span class="mini-val font-mono" id="cpu-node-{{ s.id }}">{{ s.cpu_percent }}%</span>
+                                        </div>
+                                        <div class="mini-bar-row">
+                                            <span class="mini-label">RAM:</span>
+                                            <span class="mini-val font-mono" id="mem-node-{{ s.id }}">{{ s.memory_percent }}%</span>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="table-actions">
+                                        <button class="btn-icon btn-ping" onclick="pingServer({{ s.id }})" id="btn-ping-{{ s.id }}" title="Ping and Refresh Node Health">
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
+                                            <span>Ping</span>
+                                        </button>
+                                        <button class="btn-icon btn-delete" onclick="deleteServer({{ s.id }}, '{{ s.name }}')" title="Unregister Node">
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr id="empty-servers-row">
+                                <td colspan="7" class="empty-state">
+                                    No external server nodes registered yet. Click <strong>+ Add Monitored Server</strong> above to track a new node in Jenkins &amp; Docker!
+                                </td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
     <!-- Recent Metric Samples Table -->
     <div class="content-section">
         <div class="section-header">
@@ -259,6 +413,98 @@
                     </tbody>
                 </table>
             </div>
+        </div>
+    </div>
+
+    <!-- Modal: Add New Monitored Server (Tracked in Jenkins & Docker) -->
+    <div class="modal-backdrop" id="modal-add-server" style="display: none;">
+        <div class="modal-dialog">
+            <div class="modal-header">
+                <div class="modal-title-group">
+                    <div class="modal-icon-badge">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect>
+                            <rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect>
+                            <line x1="6" y1="6" x2="6.01" y2="6"></line>
+                            <line x1="6" y1="18" x2="6.01" y2="18"></line>
+                        </svg>
+                    </div>
+                    <div>
+                        <h3 class="modal-title">Add New Server Under Monitoring</h3>
+                        <p class="modal-subtitle">Enroll node into automated Jenkins CI/CD validation &amp; Docker telemetry</p>
+                    </div>
+                </div>
+                <button class="modal-close-btn" onclick="closeAddServerModal()" aria-label="Close dialog">&times;</button>
+            </div>
+
+            <form id="form-add-server" onsubmit="submitAddServer(event)">
+                <div class="modal-body">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label class="form-label" for="server-name">Server / Node Name <span class="required">*</span></label>
+                            <input type="text" id="server-name" name="name" class="form-input" placeholder="e.g. web-prod-cluster-02" required autofocus>
+                            <span class="form-hint">Unique identifier for this infrastructure host or microservice</span>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="server-host">IP Address or Hostname <span class="required">*</span></label>
+                            <input type="text" id="server-host" name="host" class="form-input" placeholder="e.g. 192.168.1.125 or node2.cloud.local" required>
+                            <span class="form-hint">Reachable IPv4 address, DNS hostname, or container network gateway</span>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="server-port">Target Port <span class="required">*</span></label>
+                            <input type="number" id="server-port" name="port" class="form-input" value="5000" min="1" max="65535" required>
+                            <span class="form-hint">Standard port (e.g. 5000 for Flask, 5002 for Docker, 8085 for Jenkins)</span>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="server-environment">Deployment Environment</label>
+                            <select id="server-environment" name="environment" class="form-select">
+                                <option value="Production" selected>Production (Live Cloud Cluster)</option>
+                                <option value="Staging">Staging (Pre-Release Validation)</option>
+                                <option value="Development">Development (DevOps Sandbox)</option>
+                                <option value="Edge-Cluster">Edge Cluster / Worker Node</option>
+                            </select>
+                            <span class="form-hint">Classification tier for alerting priorities and threshold policies</span>
+                        </div>
+
+                        <div class="form-group full-width">
+                            <label class="form-label" for="server-jenkins">Jenkins CI/CD Pipeline Tracking</label>
+                            <div class="input-with-icon">
+                                <span class="input-icon jenkins-badge-tag">JENKINS</span>
+                                <input type="text" id="server-jenkins" name="jenkins_job" class="form-input with-prefix" value="Cloud-Infrastructure-Monitoring-Pipeline">
+                            </div>
+                            <span class="form-hint">Automated Jenkins pipeline job that validates tests, builds, and health on this server</span>
+                        </div>
+
+                        <div class="form-group full-width">
+                            <label class="form-label" for="server-docker">Docker Desktop Container Tracking</label>
+                            <div class="input-with-icon">
+                                <span class="input-icon docker-badge-tag">DOCKER</span>
+                                <input type="text" id="server-docker" name="docker_container" class="form-input with-prefix" placeholder="e.g. cloud-monitor or container-worker-node">
+                            </div>
+                            <span class="form-hint">Docker container or microservices pod mapped for telemetry inspection</span>
+                        </div>
+                    </div>
+
+                    <div class="modal-notice">
+                        <div class="notice-icon">ℹ️</div>
+                        <div class="notice-text">
+                            <strong>Automated Registration:</strong> Adding this server will immediately link it to 
+                            the real Jenkins CI server (Port 8085) and register a container telemetry slot in Docker Desktop.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeAddServerModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary" id="btn-submit-server">
+                        <span class="btn-spinner" id="btn-submit-spinner" style="display: none;"></span>
+                        <span>Register &amp; Track Server Node</span>
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 </div>

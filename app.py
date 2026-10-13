@@ -65,6 +65,9 @@ def dashboard():
     health_status = monitoring.get_system_health_status()
     alert_stats = monitoring.get_alert_stats()
 
+    # Fetch registered server nodes (tracked in Jenkins & Docker)
+    servers_list = monitoring.get_servers()
+
     return render_template(
         'index.html',
         metrics=metrics_data,
@@ -73,6 +76,7 @@ def dashboard():
         settings=settings,
         health_status=health_status,
         alert_stats=alert_stats,
+        servers=servers_list,
         error_message=error_message
     )
 
@@ -217,7 +221,112 @@ def health_check():
 @app.route('/devops')
 def devops_pipeline():
     """DevOps operations dashboard displaying Jenkins, Docker, and GitHub telemetry."""
-    return render_template('devops_pipeline_dashboard.html')
+    servers_list = monitoring.get_servers()
+    return render_template('devops_pipeline_dashboard.html', servers=servers_list)
+
+
+@app.route('/api/servers', methods=['GET'])
+def api_get_servers():
+    """Retrieve JSON list of all monitored servers with Jenkins and Docker metadata."""
+    try:
+        servers_list = monitoring.get_servers()
+        return jsonify({'status': 'success', 'servers': servers_list}), 200
+    except Exception as e:
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+
+@app.route('/api/servers/add', methods=['POST'])
+@app.route('/add_server', methods=['POST'])
+def api_add_server():
+    """
+    Register a new server under monitoring with automated Jenkins & Docker tracking.
+    Supports both JSON and form data submission.
+    """
+    is_api = request.path.startswith('/api/') or request.is_json or request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+
+    if request.is_json:
+        payload = request.get_json() or {}
+        name = payload.get('name')
+        host = payload.get('host')
+        port = payload.get('port', 5000)
+        environment = payload.get('environment', 'Production')
+        docker_container = payload.get('docker_container')
+        jenkins_job = payload.get('jenkins_job')
+    else:
+        name = request.form.get('name')
+        host = request.form.get('host')
+        port = request.form.get('port', 5000)
+        environment = request.form.get('environment', 'Production')
+        docker_container = request.form.get('docker_container')
+        jenkins_job = request.form.get('jenkins_job')
+
+    try:
+        server_id = monitoring.add_server(
+            name=name,
+            host=host,
+            port=port,
+            environment=environment,
+            docker_container=docker_container,
+            jenkins_job=jenkins_job
+        )
+        new_server = monitoring.get_server_by_id(server_id)
+
+        if is_api:
+            return jsonify({
+                'status': 'success',
+                'message': f"Server '{name}' successfully registered under Jenkins & Docker monitoring!",
+                'server': new_server
+            }), 201
+        else:
+            flash(f"Server '{name}' successfully registered and enrolled in Jenkins CI & Docker tracking!", "success")
+            return redirect(url_for('dashboard'))
+
+    except ValueError as ve:
+        if is_api:
+            return jsonify({'status': 'error', 'message': str(ve)}), 400
+        else:
+            flash(str(ve), "danger")
+            return redirect(url_for('dashboard'))
+    except Exception as e:
+        if is_api:
+            return jsonify({'status': 'error', 'message': f"Internal server error: {str(e)}"}), 500
+        else:
+            flash(f"Error registering server: {str(e)}", "danger")
+            return redirect(url_for('dashboard'))
+
+
+@app.route('/api/servers/<int:server_id>/delete', methods=['POST', 'DELETE'])
+@app.route('/delete_server/<int:server_id>', methods=['POST'])
+def api_delete_server(server_id):
+    """Unregister / remove a server node from active monitoring."""
+    is_api = request.path.startswith('/api/') or request.is_json or request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+    success = monitoring.delete_server(server_id)
+
+    if is_api:
+        if success:
+            return jsonify({'status': 'success', 'message': f'Server #{server_id} removed.'}), 200
+        return jsonify({'status': 'error', 'message': f'Server #{server_id} not found.'}), 404
+    else:
+        if success:
+            flash(f"Server #{server_id} successfully unregistered.", "info")
+        else:
+            flash(f"Server #{server_id} not found.", "warning")
+        return redirect(url_for('dashboard'))
+
+
+@app.route('/api/servers/<int:server_id>/ping', methods=['POST'])
+def api_ping_server(server_id):
+    """Perform live health ping and update latency/CPU telemetry for server node."""
+    server = monitoring.get_server_by_id(server_id)
+    if not server:
+        return jsonify({'status': 'error', 'message': 'Server not found'}), 404
+
+    result = monitoring.ping_server(server_id)
+    return jsonify({
+        'status': 'success',
+        'message': f"Ping to {server['name']} ({server['host']}) successful: {result['latency_ms']}ms",
+        'result': result
+    }), 200
 
 
 @app.errorhandler(404)

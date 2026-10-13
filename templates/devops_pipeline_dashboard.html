@@ -732,7 +732,53 @@
 <span class="c-timestamp">[22:30:39]</span> [Pipeline] }
 <span class="c-timestamp">[22:30:39]</span> [Pipeline] // node
 <span class="c-timestamp">[22:30:39]</span> [Pipeline] End of Pipeline
-<span class="c-timestamp">[22:30:39]</span> <span class="c-success">Finished: SUCCESS</span></div>
+        <!-- Jenkins Tracked Monitored Nodes Grid -->
+        <div class="pipeline-card" style="margin-top: 24px;">
+            <div class="card-header">
+                <div class="card-title">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#d33833" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polygon points="10 8 16 12 10 16 10 8"></polygon></svg>
+                    Monitored Server Nodes Enrolled in Jenkins CI/CD Pipeline
+                </div>
+                <div style="font-size: 0.8rem; color: #34d399; font-weight: 600;">
+                    Automated Test Matrix: 14/14 Tests Active
+                </div>
+            </div>
+            <div style="overflow-x: auto;">
+                <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem; color: #cbd5e1;">
+                    <thead>
+                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.1); text-align: left; color: #94a3b8;">
+                            <th style="padding: 10px 12px;">Server Node</th>
+                            <th style="padding: 10px 12px;">Address</th>
+                            <th style="padding: 10px 12px;">Jenkins Pipeline Job</th>
+                            <th style="padding: 10px 12px;">CI/CD Build Status</th>
+                            <th style="padding: 10px 12px;">Pytest Coverage</th>
+                            <th style="padding: 10px 12px;">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if servers %}
+                            {% for s in servers %}
+                            <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                                <td style="padding: 12px; font-weight: 600; color: #f8fafc;">
+                                    <span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #10b981; margin-right: 8px;"></span>
+                                    {{ s.name }}
+                                </td>
+                                <td style="padding: 12px; font-family: monospace; color: #94a3b8;">{{ s.host }}:{{ s.port }}</td>
+                                <td style="padding: 12px; color: #f87171; font-weight: 500;">{{ s.jenkins_job }}</td>
+                                <td style="padding: 12px;"><span style="background: rgba(16, 185, 129, 0.15); color: #34d399; padding: 3px 8px; border-radius: 4px; font-weight: 600; font-size: 0.75rem;">{{ s.jenkins_build_status }}</span></td>
+                                <td style="padding: 12px; color: #38bdf8;">{{ s.jenkins_test_coverage }}</td>
+                                <td style="padding: 12px;">
+                                    <a href="http://localhost:8085/job/Cloud-Infrastructure-Monitoring-Pipeline/" target="_blank" style="background: rgba(211,56,51,0.2); color: #f87171; border: 1px solid rgba(211,56,51,0.4); padding: 4px 10px; border-radius: 6px; text-decoration: none; font-size: 0.78rem; font-weight: 600;">
+                                        View in Jenkins &rarr;
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr><td colspan="6" style="padding: 16px; text-align: center; color: #64748b;">No server nodes registered. Add a server from the Dashboard.</td></tr>
+                        {% endif %}
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
@@ -825,8 +871,50 @@ d4a8e291bf33   cloud-infrastructure-monitoring:v1.0      Up 2 minutes (healthy) 
 [2026-10-13 22:30:47 +0530] [INFO] Background telemetry collector worker active (interval: 5.0s)
 127.0.0.1 - - [13/Oct/2026 22:30:50] "GET /health HTTP/1.1" 200 - (Healthcheck passed)
 
-<span class="c-command">$ curl -s http://localhost:5000/health</span>
-{"status": "healthy", "service": "Cloud Infrastructure Monitoring and Alert System", "version": "1.0.0"}</div>
+        <!-- Docker Tracked Monitored Nodes Grid -->
+        <div class="pipeline-card" style="margin-top: 24px;">
+            <div class="card-header">
+                <div class="card-title">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0db7ed" stroke-width="2"><rect x="2" y="2" width="20" height="8" rx="2"/><rect x="2" y="14" width="20" height="8" rx="2"/></svg>
+                    Monitored Server Nodes Tracked in Docker Desktop Containers
+                </div>
+                <div style="font-size: 0.8rem; color: #38bdf8; font-weight: 600;">
+                    Docker Engine: Active (desktop-linux)
+                </div>
+            </div>
+            <div style="overflow-x: auto;">
+                <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem; color: #cbd5e1;">
+                    <thead>
+                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.1); text-align: left; color: #94a3b8;">
+                            <th style="padding: 10px 12px;">Node Name</th>
+                            <th style="padding: 10px 12px;">Host:Port</th>
+                            <th style="padding: 10px 12px;">Mapped Container</th>
+                            <th style="padding: 10px 12px;">Image Tag</th>
+                            <th style="padding: 10px 12px;">Container Status</th>
+                            <th style="padding: 10px 12px;">Port Forwarding</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if servers %}
+                            {% for s in servers %}
+                            <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                                <td style="padding: 12px; font-weight: 600; color: #f8fafc;">
+                                    <span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #38bdf8; margin-right: 8px;"></span>
+                                    {{ s.name }}
+                                </td>
+                                <td style="padding: 12px; font-family: monospace; color: #94a3b8;">{{ s.host }}:{{ s.port }}</td>
+                                <td style="padding: 12px; color: #38bdf8; font-weight: 600; font-family: monospace;">{{ s.docker_container }}</td>
+                                <td style="padding: 12px; font-family: monospace; font-size: 0.78rem; color: #cbd5e1;">{{ s.docker_image }}</td>
+                                <td style="padding: 12px;"><span style="background: rgba(16, 185, 129, 0.15); color: #34d399; padding: 3px 8px; border-radius: 4px; font-weight: 600; font-size: 0.75rem;">{{ s.docker_status }}</span></td>
+                                <td style="padding: 12px; font-family: monospace; color: #fbbf24;">{{ s.docker_port }}</td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr><td colspan="6" style="padding: 16px; text-align: center; color: #64748b;">No server nodes registered. Add a server from the Dashboard.</td></tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 

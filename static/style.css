@@ -1178,3 +1178,550 @@ html, body {
         align-items: flex-start;
     }
 }
+
+/* ==========================================================================
+   Multi-Server Infrastructure Fleet & Jenkins/Docker Tracking Styles
+   ========================================================================== */
+.title-with-badge {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.badge-accent {
+    background: rgba(2, 132, 199, 0.2);
+    color: #38bdf8;
+    border: 1px solid rgba(56, 189, 248, 0.4);
+    font-size: 0.75rem;
+    padding: 0.25rem 0.65rem;
+    border-radius: 9999px;
+    font-weight: 600;
+}
+
+.btn-jenkins {
+    background: rgba(211, 56, 51, 0.15);
+    color: #f87171;
+    border: 1px solid rgba(211, 56, 51, 0.35);
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    transition: all 0.2s;
+}
+
+.btn-jenkins:hover {
+    background: rgba(211, 56, 51, 0.25);
+    border-color: #f87171;
+    color: #fff;
+    transform: translateY(-1px);
+}
+
+.btn-docker {
+    background: rgba(13, 183, 237, 0.15);
+    color: #38bdf8;
+    border: 1px solid rgba(13, 183, 237, 0.35);
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    transition: all 0.2s;
+}
+
+.btn-docker:hover {
+    background: rgba(13, 183, 237, 0.25);
+    border-color: #38bdf8;
+    color: #fff;
+    transform: translateY(-1px);
+}
+
+.fleet-kpi-bar {
+    display: flex;
+    gap: 0.75rem;
+    margin-bottom: 1.25rem;
+    flex-wrap: wrap;
+}
+
+.kpi-chip {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    padding: 0.5rem 0.85rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.82rem;
+}
+
+.kpi-chip-label {
+    color: var(--text-muted);
+}
+
+.kpi-chip-val {
+    color: var(--text-primary);
+    font-weight: 600;
+}
+
+.kpi-chip-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+.dot-green { background-color: #10b981; box-shadow: 0 0 6px rgba(16, 185, 129, 0.6); }
+.dot-blue { background-color: #38bdf8; box-shadow: 0 0 6px rgba(56, 189, 248, 0.6); }
+
+.jenkins-icon-sm {
+    background: #d33833;
+    color: #fff;
+    font-size: 0.65rem;
+    font-weight: 800;
+    width: 16px;
+    height: 16px;
+    border-radius: 3px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.docker-icon-sm {
+    font-size: 0.85rem;
+}
+
+.text-jenkins { color: #f87171 !important; }
+.text-docker { color: #38bdf8 !important; }
+.text-green { color: #34d399 !important; }
+.text-blue { color: #38bdf8 !important; }
+
+/* Table cells */
+.node-cell {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.status-pulse-dot {
+    width: 10px;
+    height: 10px;
+    background-color: #10b981;
+    border-radius: 50%;
+    display: inline-block;
+    box-shadow: 0 0 8px #10b981;
+    animation: pulseGlow 2s infinite ease-in-out;
+}
+
+@keyframes pulseGlow {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.2); opacity: 0.75; }
+}
+
+.node-details {
+    display: flex;
+    flex-direction: column;
+}
+
+.node-name {
+    color: var(--text-primary);
+    font-size: 0.9rem;
+}
+
+.node-ip {
+    font-size: 0.78rem;
+}
+
+.badge-env-production {
+    background: rgba(16, 185, 129, 0.15);
+    color: #34d399;
+    border: 1px solid rgba(16, 185, 129, 0.3);
+    font-size: 0.72rem;
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+}
+
+.badge-env-staging {
+    background: rgba(245, 158, 11, 0.15);
+    color: #fbbf24;
+    border: 1px solid rgba(245, 158, 11, 0.3);
+    font-size: 0.72rem;
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+}
+
+.badge-env-development {
+    background: rgba(139, 92, 246, 0.15);
+    color: #a78bfa;
+    border: 1px solid rgba(139, 92, 246, 0.3);
+    font-size: 0.72rem;
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+}
+
+.badge-env-edge-cluster, .badge-env-production-container {
+    background: rgba(56, 189, 248, 0.15);
+    color: #38bdf8;
+    border: 1px solid rgba(56, 189, 248, 0.3);
+    font-size: 0.72rem;
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+}
+
+/* Tracking Pills (Jenkins & Docker) */
+.tracking-pill {
+    padding: 0.5rem 0.75rem;
+    border-radius: var(--radius-sm);
+    font-size: 0.8rem;
+    min-width: 180px;
+}
+
+.tracking-jenkins {
+    background: rgba(211, 56, 51, 0.08);
+    border: 1px solid rgba(211, 56, 51, 0.25);
+}
+
+.tracking-docker {
+    background: rgba(13, 183, 237, 0.08);
+    border: 1px solid rgba(13, 183, 237, 0.25);
+}
+
+.tracking-header {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-weight: 600;
+    margin-bottom: 0.2rem;
+}
+
+.tracking-title {
+    color: var(--text-primary);
+    text-decoration: none;
+    font-size: 0.82rem;
+}
+
+.tracking-title:hover {
+    color: #38bdf8;
+    text-decoration: underline;
+}
+
+.jenkins-dot {
+    background: #d33833;
+    color: #fff;
+    width: 14px;
+    height: 14px;
+    border-radius: 3px;
+    font-size: 0.55rem;
+    font-weight: 800;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.docker-dot {
+    font-size: 0.75rem;
+}
+
+.tracking-sub {
+    font-size: 0.72rem;
+}
+
+.badge-sub-status {
+    font-weight: 600;
+}
+
+.status-latency-cell {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.latency-indicator {
+    font-size: 0.75rem;
+    color: #34d399;
+}
+
+.resource-mini-bars {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    font-size: 0.75rem;
+}
+
+.mini-bar-row {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.mini-label {
+    color: var(--text-muted);
+    width: 32px;
+}
+
+.mini-val {
+    color: var(--text-primary);
+    font-weight: 600;
+}
+
+.table-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.btn-icon {
+    padding: 0.35rem 0.65rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    border: 1px solid var(--border-color);
+    background: var(--bg-card);
+    color: var(--text-secondary);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.btn-ping:hover {
+    border-color: #10b981;
+    color: #34d399;
+    background: rgba(16, 185, 129, 0.1);
+}
+
+.btn-delete:hover {
+    border-color: #ef4444;
+    color: #f87171;
+    background: rgba(239, 68, 68, 0.1);
+}
+
+/* Modal Dialog Styles */
+.modal-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(3, 7, 18, 0.75);
+    backdrop-filter: blur(6px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 1rem;
+    animation: modalFadeIn 0.2s ease-out;
+}
+
+@keyframes modalFadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.modal-dialog {
+    background: var(--bg-surface);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7), 0 0 25px rgba(2, 132, 199, 0.15);
+    max-width: 620px;
+    width: 100%;
+    overflow: hidden;
+    animation: modalSlideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes modalSlideUp {
+    from { transform: translateY(20px) scale(0.97); }
+    to { transform: translateY(0) scale(1); }
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.modal-title-group {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+}
+
+.modal-icon-badge {
+    width: 42px;
+    height: 42px;
+    border-radius: var(--radius-md);
+    background: linear-gradient(135deg, #0284c7, #2563eb);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    box-shadow: 0 0 14px rgba(14, 165, 233, 0.3);
+}
+
+.modal-title {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.modal-subtitle {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    margin-top: 0.15rem;
+}
+
+.modal-close-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    font-size: 1.5rem;
+    line-height: 1;
+    cursor: pointer;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    transition: all 0.15s;
+}
+
+.modal-close-btn:hover {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.modal-body {
+    padding: 1.5rem;
+    max-height: 70vh;
+    overflow-y: auto;
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.15rem;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+.form-group.full-width {
+    grid-column: span 2;
+}
+
+.form-label {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.required {
+    color: #ef4444;
+}
+
+.form-input, .form-select {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    color: var(--text-primary);
+    padding: 0.6rem 0.85rem;
+    font-family: inherit;
+    font-size: 0.875rem;
+    transition: all 0.2s;
+}
+
+.form-input:focus, .form-select:focus {
+    outline: none;
+    border-color: #38bdf8;
+    box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.15);
+}
+
+.input-with-icon {
+    display: flex;
+    align-items: stretch;
+}
+
+.jenkins-badge-tag {
+    background: #d33833;
+    color: #fff;
+    font-size: 0.65rem;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    padding: 0 0.65rem;
+    display: flex;
+    align-items: center;
+    border-top-left-radius: var(--radius-sm);
+    border-bottom-left-radius: var(--radius-sm);
+}
+
+.docker-badge-tag {
+    background: #0db7ed;
+    color: #000;
+    font-size: 0.65rem;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    padding: 0 0.65rem;
+    display: flex;
+    align-items: center;
+    border-top-left-radius: var(--radius-sm);
+    border-bottom-left-radius: var(--radius-sm);
+}
+
+.form-input.with-prefix {
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+    flex: 1;
+}
+
+.form-hint {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+}
+
+.modal-notice {
+    margin-top: 1.25rem;
+    background: rgba(56, 189, 248, 0.08);
+    border: 1px solid rgba(56, 189, 248, 0.2);
+    border-radius: var(--radius-sm);
+    padding: 0.75rem 1rem;
+    display: flex;
+    align-items: flex-start;
+    gap: 0.65rem;
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+}
+
+.modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75rem;
+    padding: 1.15rem 1.5rem;
+    border-top: 1px solid var(--border-color);
+    background: rgba(255, 255, 255, 0.02);
+}
+
+/* Toast Notifications */
+.toast-box {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    background: #1e293b;
+    border: 1px solid #38bdf8;
+    color: #f8fafc;
+    padding: 12px 18px;
+    border-radius: 8px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.6);
+    z-index: 2000;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.875rem;
+    animation: toastSlide 0.3s ease;
+}
+
+@keyframes toastSlide {
+    from { transform: translateY(20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+

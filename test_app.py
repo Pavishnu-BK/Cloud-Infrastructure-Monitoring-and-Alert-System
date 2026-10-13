@@ -288,3 +288,85 @@ def test_pipeline_and_devops_dashboard_route(client):
 
     res_devops = client.get('/devops')
     assert res_devops.status_code == 200
+
+
+def test_server_fleet_database_operations(temp_db):
+    """Verify server node database registration, retrieval, ping, and removal."""
+    # Database starts with 2 default seeded nodes
+    initial_servers = monitoring.get_servers(temp_db)
+    assert len(initial_servers) == 2
+    assert initial_servers[0]['name'] == 'Host-Primary-Master'
+    assert initial_servers[1]['name'] == 'Docker-Agent-Container'
+
+    # Add a new custom monitored server
+    new_id = monitoring.add_server(
+        name='Worker-Node-Alpha',
+        host='192.168.1.50',
+        port=5000,
+        environment='Staging',
+        docker_container='cloud-monitor-worker-alpha',
+        jenkins_job='Cloud-Infrastructure-Monitoring-Pipeline',
+        db_path=temp_db
+    )
+    assert new_id is not None
+
+    # Retrieve and verify properties
+    srv = monitoring.get_server_by_id(new_id, temp_db)
+    assert srv['name'] == 'Worker-Node-Alpha'
+    assert srv['host'] == '192.168.1.50'
+    assert srv['environment'] == 'Staging'
+    assert srv['status'] == 'Online'
+    assert 'cloud-monitor-worker-alpha' in srv['docker_container']
+
+    # Test live ping
+    ping_res = monitoring.ping_server(new_id, temp_db)
+    assert ping_res['status'] == 'Online'
+    assert ping_res['latency_ms'] > 0
+
+    # Test deletion
+    deleted = monitoring.delete_server(new_id, temp_db)
+    assert deleted is True
+    assert monitoring.get_server_by_id(new_id, temp_db) is None
+
+
+def test_api_servers_endpoints(client, temp_db):
+    """Verify REST API endpoints for server listing, registration, ping, and deletion."""
+    # 1. GET /api/servers
+    res_list = client.get('/api/servers')
+    assert res_list.status_code == 200
+    data_list = res_list.get_json()
+    assert data_list['status'] == 'success'
+    assert len(data_list['servers']) >= 2
+
+    # 2. POST /api/servers/add with JSON payload
+    res_add_json = client.post('/api/servers/add', json={
+        'name': 'API-Edge-Server-01',
+        'host': '10.0.0.15',
+        'port': 5000,
+        'environment': 'Production',
+        'docker_container': 'cloud-monitor-edge',
+        'jenkins_job': 'Cloud-Infrastructure-Monitoring-Pipeline'
+    })
+    assert res_add_json.status_code == 201
+    data_add = res_add_json.get_json()
+    assert data_add['status'] == 'success'
+    server_id = data_add['server']['id']
+    assert data_add['server']['name'] == 'API-Edge-Server-01'
+
+    # 3. POST /api/servers/<id>/ping
+    res_ping = client.post(f'/api/servers/{server_id}/ping')
+    assert res_ping.status_code == 200
+    data_ping = res_ping.get_json()
+    assert data_ping['status'] == 'success'
+    assert 'latency_ms' in data_ping['result']
+
+    # 4. POST /api/servers/<id>/delete
+    res_del = client.post(f'/api/servers/{server_id}/delete')
+    assert res_del.status_code == 200
+    data_del = res_del.get_json()
+    assert data_del['status'] == 'success'
+
+    # 5. Validation failure with empty name returns 400
+    res_bad = client.post('/api/servers/add', json={'name': '', 'host': '127.0.0.1'})
+    assert res_bad.status_code == 400
+
