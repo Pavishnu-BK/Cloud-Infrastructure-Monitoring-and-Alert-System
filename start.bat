@@ -104,11 +104,11 @@ echo.
 :: 5. Stage 4: Run Automated Pytest Suite
 :: -----------------------------------------------------------------------------
 echo ===============================================================================
-echo [*] [STEP 4/4] RUNNING AUTOMATED PYTEST SUITE - 11 Unit and Integration Tests -
+echo [*] [STEP 4/4] RUNNING AUTOMATED PYTEST SUITE - 12 Unit and Integration Tests -
 echo ===============================================================================
 %PY_CMD% -m pytest test_app.py -v --tb=short
 echo.
-echo [OK] 11/11 AUTOMATED TESTS VERIFIED - 100%% PASSING.
+echo [OK] 12/12 AUTOMATED TESTS VERIFIED - 100%% PASSING.
 echo.
 
 echo ===============================================================================
