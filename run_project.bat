@@ -41,30 +41,43 @@ exit /b 1
 :PYTHON_READY
 
 :: -----------------------------------------------------------------------------
-:: 2. Stage 1: Free Network Ports 5000 and 8085
+:: 2. Stage 1: Verify and Launch Real Jenkins on Port 8085
 :: -----------------------------------------------------------------------------
-echo [*] [STEP 1/4] Preparing network ports (5000 and 8085)...
-powershell -NoProfile -Command "Get-NetTCPConnection -LocalPort 5000 -State Listen -ErrorAction SilentlyContinue | ForEach-Object { Stop-Process -Id $_.OwningProcess -Force -ErrorAction SilentlyContinue }" >nul 2>&1
-powershell -NoProfile -Command "Get-NetTCPConnection -LocalPort 8085 -State Listen -ErrorAction SilentlyContinue | ForEach-Object { Stop-Process -Id $_.OwningProcess -Force -ErrorAction SilentlyContinue }" >nul 2>&1
-echo [OK] Ports 5000 and 8085 ready.
-echo.
+set "WAIT_JENKINS=0"
+netstat -ano | findstr :8085 >nul 2>&1
+if %ERRORLEVEL% neq 0 (
+    echo [*] [STEP 1/4] Starting Official Jenkins Server on port 8085
+    start "Official Jenkins Server on Port 8085" /min cmd /c "run_real_jenkins.bat"
+    set "WAIT_JENKINS=1"
+) else (
+    echo [*] [STEP 1/4] Official Jenkins Server is already active on port 8085
+)
 
 :: -----------------------------------------------------------------------------
-:: 3. Stage 2: Start Real Jenkins, Flask Monitoring & Docker Desktop
+:: 3. Stage 2: Verify and Launch Flask Monitoring App and Docker Desktop
 :: -----------------------------------------------------------------------------
 echo ===============================================================================
-echo [*] [STEP 2/4] STARTING SERVICES ^& LAUNCHING DOCKER DESKTOP
+echo [*] [STEP 2/4] STARTING SERVICES AND LAUNCHING DOCKER DESKTOP
 echo ===============================================================================
-echo [*] 1. Starting Official Jenkins Automation Server (Port 8085)...
-start "Official Jenkins Server (Port 8085)" /min cmd /c "run_real_jenkins.bat"
 
-echo [*] 2. Starting Flask Cloud Monitoring Web Server (Port 5000)...
-start "Cloud Monitoring Server (Port 5000)" /min %PY_CMD% app.py
+netstat -ano | findstr :5000 >nul 2>&1
+if %ERRORLEVEL% neq 0 (
+    echo [*] 1. Starting Flask Cloud Monitoring Web Server on port 5000
+    start "Cloud Monitoring Server on Port 5000" /min %PY_CMD% app.py
+) else (
+    echo [OK] 1. Flask Monitoring Server is already active on port 5000
+)
 
-echo [*] 3. Launching Docker Desktop application window...
+echo [*] 2. Launching Docker Desktop application window
 start "" "C:\Program Files\Docker\Docker\Docker Desktop.exe" >nul 2>&1
 
-echo [OK] Real Jenkins, Flask App, and Docker Desktop triggered.
+:: If Jenkins was freshly started, wait 4 seconds for Jetty to bind
+if "!WAIT_JENKINS!"=="1" (
+    echo [*] Initializing Jenkins runtime
+    ping 127.0.0.1 -n 4 >nul
+) else (
+    ping 127.0.0.1 -n 2 >nul
+)
 echo.
 
 :: -----------------------------------------------------------------------------
@@ -79,7 +92,7 @@ start "" "http://localhost:8085"
 echo [*] Opening Live Cloud Monitoring Dashboard:    http://localhost:5000/dashboard
 start "" "http://localhost:5000/dashboard"
 
-echo [*] Opening DevOps Telemetry ^& Operations Hub:  http://localhost:5000/pipeline
+echo [*] Opening DevOps Telemetry and Operations Hub: http://localhost:5000/pipeline
 start "" "http://localhost:5000/pipeline"
 
 echo [*] Opening Live GitHub Repository:            https://github.com/Pavishnu-BK/Cloud-Infrastructure-Monitoring-and-Alert-System
@@ -91,11 +104,11 @@ echo.
 :: 5. Stage 4: Run Automated Pytest Suite
 :: -----------------------------------------------------------------------------
 echo ===============================================================================
-echo [*] [STEP 4/4] RUNNING AUTOMATED PYTEST SUITE (11 Unit and Integration Tests)
+echo [*] [STEP 4/4] RUNNING AUTOMATED PYTEST SUITE - 11 Unit and Integration Tests -
 echo ===============================================================================
 %PY_CMD% -m pytest test_app.py -v --tb=short
 echo.
-echo [OK] 11/11 AUTOMATED TESTS VERIFIED (100%% PASSING).
+echo [OK] 11/11 AUTOMATED TESTS VERIFIED - 100%% PASSING.
 echo.
 
 echo ===============================================================================
@@ -103,10 +116,10 @@ echo     [SUCCESS] EVERYTHING IS OPEN AND RUNNING LIVE!
 echo ===============================================================================
 echo.
 echo     ACTIVE SERVICES:
-echo       1. Official Jenkins UI: http://localhost:8085             (Real Jenkins Server)
-echo       2. Flask Monitoring App:  http://localhost:5000/dashboard   (Opened in Browser)
-echo       3. DevOps Operations Hub: http://localhost:5000/pipeline    (Opened in Browser)
-echo       4. GitHub Repository:     https://github.com/Pavishnu-BK/.. (Opened in Browser)
+echo       1. Official Jenkins UI:   http://localhost:8085            [Real Jenkins Server]
+echo       2. Flask Monitoring App:  http://localhost:5000/dashboard  [Opened in Browser]
+echo       3. DevOps Operations Hub: http://localhost:5000/pipeline   [Opened in Browser]
+echo       4. GitHub Repository:     https://github.com/Pavishnu-BK/Cloud-Infrastructure-Monitoring-and-Alert-System
 echo       5. Docker Desktop:        Active Window on your Desktop
 echo.
 echo ===============================================================================

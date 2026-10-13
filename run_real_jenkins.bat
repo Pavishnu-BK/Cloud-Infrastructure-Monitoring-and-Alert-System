@@ -28,4 +28,3 @@ echo.
 
 "%JAVA_BIN%" -Djenkins.install.runSetupWizard=false -jar "%~dp0jenkins.war" --enable-future-java --httpPort=8085
 
-pause
