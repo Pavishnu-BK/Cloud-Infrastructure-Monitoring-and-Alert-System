@@ -808,7 +808,7 @@ python                              3.11-slim 7bc3e9f4277c   2 weeks ago     130
 <span class="c-command">$ docker run -d --name cloud-monitor -p 5000:5000 -v monitoring_vol:/app/data --restart unless-stopped cloud-infrastructure-monitoring:v1.0</span>
 d4a8e291bf33c870a41d9c025812f86230b4278149d42f567c94b2938ab4e19b
 
-<span class="c-command">$ docker ps --format "table {{.ID}}\t{{.Image}}\t{{.Status}}\t{{.Ports}}\t{{.Names}}"</span>
+<span class="c-command">$ docker ps --format "table {% raw %}{{.ID}}\t{{.Image}}\t{{.Status}}\t{{.Ports}}\t{{.Names}}{% endraw %}"</span>
 CONTAINER ID   IMAGE                                     STATUS                   PORTS                    NAMES
 d4a8e291bf33   cloud-infrastructure-monitoring:v1.0      Up 2 minutes (healthy)   0.0.0.0:5000->5000/tcp   cloud-monitor
 

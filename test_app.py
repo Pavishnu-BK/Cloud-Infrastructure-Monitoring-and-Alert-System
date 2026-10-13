@@ -277,3 +277,14 @@ def test_format_uptime_utility():
     assert monitoring.format_uptime(125) == "2m 5s"
     assert monitoring.format_uptime(3665) == "1h 1m 5s"
     assert monitoring.format_uptime(90061) == "1d 1h 1m 1s"
+
+
+def test_pipeline_and_devops_dashboard_route(client):
+    """Verify DevOps operations and CI/CD hub renders HTTP 200 without template syntax errors."""
+    res_pipeline = client.get('/pipeline')
+    assert res_pipeline.status_code == 200
+    assert b'Jenkins' in res_pipeline.data
+    assert b'Docker' in res_pipeline.data
+
+    res_devops = client.get('/devops')
+    assert res_devops.status_code == 200
