@@ -1,0 +1,213 @@
+{% extends "base.html" %}
+
+{% block title %}Settings & System Status | Cloud Infrastructure Monitoring{% endblock %}
+
+{% block content %}
+<div class="settings-page">
+    <div class="page-header">
+        <div class="header-info">
+            <h1 class="page-title">System Status &amp; Alert Thresholds</h1>
+            <p class="page-subtitle">Configure anomaly detection limits and inspect monitored runtime environment</p>
+        </div>
+        <div class="header-actions">
+            <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">
+                &larr; Return to Dashboard
+            </a>
+        </div>
+    </div>
+
+    <div class="settings-grid">
+        <!-- Threshold Configuration Form -->
+        <div class="settings-card form-card">
+            <div class="card-header">
+                <div class="card-title-group">
+                    <span class="card-icon config-icon">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="4" y1="21" x2="4" y2="14"></line>
+                            <line x1="4" y1="10" x2="4" y2="3"></line>
+                            <line x1="12" y1="21" x2="12" y2="12"></line>
+                            <line x1="12" y1="8" x2="12" y2="3"></line>
+                            <line x1="20" y1="21" x2="20" y2="16"></line>
+                            <line x1="20" y1="12" x2="20" y2="3"></line>
+                            <line x1="1" y1="14" x2="7" y2="14"></line>
+                            <line x1="9" y1="8" x2="15" y2="8"></line>
+                            <line x1="17" y1="16" x2="23" y2="16"></line>
+                        </svg>
+                    </span>
+                    <div>
+                        <h2 class="card-title">Configure Anomaly Thresholds</h2>
+                        <span class="card-threshold">Validated Range: 1.0% to 100.0%</span>
+                    </div>
+                </div>
+            </div>
+
+            <form action="{{ url_for('update_settings') }}" method="POST" class="settings-form">
+                <div class="form-group">
+                    <div class="label-row">
+                        <label for="cpu_threshold" class="form-label">CPU Utilization Threshold (%)</label>
+                        <span class="current-badge">Current: {{ settings.cpu_threshold }}%</span>
+                    </div>
+                    <div class="input-range-combo">
+                        <input type="range" class="range-slider" min="1" max="100" step="1" 
+                               value="{{ settings.cpu_threshold }}" 
+                               oninput="document.getElementById('cpu_threshold').value = this.value;">
+                        <input type="number" id="cpu_threshold" name="cpu_threshold" 
+                               class="form-control number-input" 
+                               min="1" max="100" step="0.1" 
+                               value="{{ settings.cpu_threshold }}" required>
+                    </div>
+                    <small class="form-help">Default: 80.0%. Trigger warning/critical alert if CPU exceeds this limit.</small>
+                </div>
+
+                <div class="form-group">
+                    <div class="label-row">
+                        <label for="memory_threshold" class="form-label">Memory Utilization Threshold (%)</label>
+                        <span class="current-badge">Current: {{ settings.memory_threshold }}%</span>
+                    </div>
+                    <div class="input-range-combo">
+                        <input type="range" class="range-slider" min="1" max="100" step="1" 
+                               value="{{ settings.memory_threshold }}" 
+                               oninput="document.getElementById('memory_threshold').value = this.value;">
+                        <input type="number" id="memory_threshold" name="memory_threshold" 
+                               class="form-control number-input" 
+                               min="1" max="100" step="0.1" 
+                               value="{{ settings.memory_threshold }}" required>
+                    </div>
+                    <small class="form-help">Default: 80.0%. Trigger alert if RAM consumption exceeds this limit.</small>
+                </div>
+
+                <div class="form-group">
+                    <div class="label-row">
+                        <label for="disk_threshold" class="form-label">Disk Storage Threshold (%)</label>
+                        <span class="current-badge">Current: {{ settings.disk_threshold }}%</span>
+                    </div>
+                    <div class="input-range-combo">
+                        <input type="range" class="range-slider" min="1" max="100" step="1" 
+                               value="{{ settings.disk_threshold }}" 
+                               oninput="document.getElementById('disk_threshold').value = this.value;">
+                        <input type="number" id="disk_threshold" name="disk_threshold" 
+                               class="form-control number-input" 
+                               min="1" max="100" step="0.1" 
+                               value="{{ settings.disk_threshold }}" required>
+                    </div>
+                    <small class="form-help">Default: 85.0%. Trigger alert if filesystem storage exceeds this limit.</small>
+                </div>
+
+                <div class="form-footer">
+                    <button type="submit" class="btn btn-primary" id="btn-save-settings">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+                            <polyline points="17 21 17 13 7 13 7 21"></polyline>
+                            <polyline points="7 3 7 8 15 8"></polyline>
+                        </svg>
+                        Save &amp; Apply Thresholds
+                    </button>
+                    <span class="settings-timestamp">Last updated: {{ settings.updated_at[:19] }}</span>
+                </div>
+            </form>
+        </div>
+
+        <!-- System & Environment Diagnostics -->
+        <div class="settings-card info-card">
+            <div class="card-header">
+                <div class="card-title-group">
+                    <span class="card-icon info-icon">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect>
+                            <rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect>
+                            <line x1="6" y1="6" x2="6.01" y2="6"></line>
+                            <line x1="6" y1="18" x2="6.01" y2="18"></line>
+                        </svg>
+                    </span>
+                    <div>
+                        <h2 class="card-title">Monitored Target Diagnostics</h2>
+                        <span class="card-threshold">Local Environment Scope</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-body">
+                <ul class="diag-list">
+                    <li>
+                        <span class="diag-label">Execution Environment:</span>
+                        <span class="diag-value">
+                            {% if sys_info and sys_info.is_container %}
+                                <span class="badge badge-warning">Docker Container (Isolated)</span>
+                            {% else %}
+                                <span class="badge badge-success">Host Machine (Native)</span>
+                            {% endif %}
+                        </span>
+                    </li>
+                    <li>
+                        <span class="diag-label">Hostname / Node:</span>
+                        <span class="diag-value"><code>{{ sys_info.node_name if sys_info else 'Unknown' }}</code></span>
+                    </li>
+                    <li>
+                        <span class="diag-label">Operating System:</span>
+                        <span class="diag-value">{{ sys_info.system if sys_info else 'Unknown' }}</span>
+                    </li>
+                    <li>
+                        <span class="diag-label">Monitored Filesystem:</span>
+                        <span class="diag-value"><code>{{ sys_info.monitored_fs if sys_info else '/' }}</code></span>
+                    </li>
+                    <li>
+                        <span class="diag-label">Last Successful Collection:</span>
+                        <span class="diag-value">{{ last_collection }}</span>
+                    </li>
+                    <li>
+                        <span class="diag-label">SQLite Storage Path:</span>
+                        <span class="diag-value"><code>/app/data/monitoring.db</code></span>
+                    </li>
+                    <li>
+                        <span class="diag-label">Docker Volume Mount:</span>
+                        <span class="diag-value"><code>cloud_monitoring_data &rarr; /app/data</code></span>
+                    </li>
+                </ul>
+
+                <div class="scope-disclaimer">
+                    <div class="disclaimer-title">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                        <strong>Monitoring Scope &amp; Limitations Notice</strong>
+                    </div>
+                    <p>
+                        This application utilizes Python's <code>psutil</code> library to monitor the system running this process. When deployed inside an unprivileged Docker container, CPU and memory metrics reflect the container's visible cgroups and virtual boundaries. It does <em>not</em> claim connection to third-party public cloud providers (AWS, Azure, GCP) unless explicitly configured with external APIs.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- College DevOps Demonstration / Viva Card -->
+    <div class="demo-card">
+        <div class="demo-header">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+            </svg>
+            <h3>DevOps Laboratory Demonstration Guide (Viva / CAT)</h3>
+        </div>
+        <div class="demo-body">
+            <div class="demo-step">
+                <span class="step-badge">Step 1</span>
+                <div>
+                    <strong>Simulate Alert Trigger:</strong>
+                    <p>Set the CPU threshold above to <code>5.0%</code> (below normal machine load) and click <em>Save &amp; Apply Thresholds</em>. Return to the Dashboard and click <em>Refresh Now</em>. Observe that a <strong>High Load Alert</strong> is instantly generated and logged in the Alerts tab.</p>
+                </div>
+            </div>
+            <div class="demo-step">
+                <span class="step-badge">Step 2</span>
+                <div>
+                    <strong>Demonstrate Deduplication:</strong>
+                    <p>Click <em>Refresh Now</em> multiple times while the CPU threshold remains at 5.0%. Show the professor that <em>no duplicate alert records</em> are spammed into SQLite—the existing alert remains Active and updates its reading.</p>
+                </div>
+            </div>
+            <div class="demo-step">
+                <span class="step-badge">Step 3</span>
+                <div>
+                    <strong>Demonstrate Auto-Resolution:</strong>
+                    <p>Return here and set the CPU threshold back to <code>80.0%</code>. Click <em>Refresh Now</em> on the Dashboard. Watch the active alert automatically transition to <span class="badge badge-success">Resolved</span> with an exact <code>resolved_at</code> timestamp!</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

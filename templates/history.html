@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+
+{% block title %}Metrics History | Cloud Infrastructure Monitoring{% endblock %}
+
+{% block content %}
+<div class="history-page">
+    <div class="page-header">
+        <div class="header-info">
+            <h1 class="page-title">Historical Metrics &amp; Trends</h1>
+            <p class="page-subtitle">Chronological resource utilization snapshots stored in SQLite database</p>
+        </div>
+        <div class="header-actions">
+            <div class="filter-group">
+                <label for="limit-select" class="filter-label">Display Limit:</label>
+                <select id="limit-select" class="select-input" onchange="location = this.value;">
+                    <option value="{{ url_for('history', limit=20) }}" {% if limit == 20 %}selected{% endif %}>Last 20 Snapshots</option>
+                    <option value="{{ url_for('history', limit=50) }}" {% if limit == 50 %}selected{% endif %}>Last 50 Snapshots</option>
+                    <option value="{{ url_for('history', limit=100) }}" {% if limit == 100 %}selected{% endif %}>Last 100 Snapshots</option>
+                </select>
+            </div>
+            <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">
+                &larr; Back to Dashboard
+            </a>
+        </div>
+    </div>
+
+    <!-- Trend Chart Card -->
+    <div class="chart-card">
+        <div class="chart-header">
+            <div class="chart-title-group">
+                <h2 class="chart-title">Resource Utilization Trend</h2>
+                <span class="chart-subtitle">Interactive trend visualization (Plain HTML5 Canvas - No external dependencies)</span>
+            </div>
+            <div class="chart-legend">
+                <span class="legend-item"><span class="legend-color legend-cpu"></span> CPU %</span>
+                <span class="legend-item"><span class="legend-color legend-memory"></span> Memory %</span>
+                <span class="legend-item"><span class="legend-color legend-disk"></span> Disk %</span>
+            </div>
+        </div>
+        <div class="chart-canvas-wrapper">
+            <canvas id="trendChartCanvas" width="900" height="280"></canvas>
+            <div id="chart-empty-message" class="chart-overlay-msg" style="display: none;">
+                No trend data available yet. Metrics snapshots will appear here as they are collected.
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabular History -->
+    <div class="content-section">
+        <div class="section-header">
+            <div class="section-title-group">
+                <h2 class="section-title">Stored Snapshots Log ({{ history|length }} Records)</h2>
+                <span class="section-subtitle">Data retrieved from <code>/app/data/monitoring.db</code></span>
+            </div>
+        </div>
+
+        <div class="table-card">
+            <div class="table-responsive">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Collection Timestamp</th>
+                            <th>CPU (%)</th>
+                            <th>Memory (%)</th>
+                            <th>Disk (%)</th>
+                            <th>System Uptime</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if history %}
+                            {% for row in history %}
+                            <tr>
+                                <td><span class="code-id">#{{ row.id }}</span></td>
+                                <td>{{ row.collected_at }}</td>
+                                <td>
+                                    <span class="metric-pill">{{ row.cpu_percent }}%</span>
+                                </td>
+                                <td>
+                                    <span class="metric-pill">{{ row.memory_percent }}%</span>
+                                </td>
+                                <td>
+                                    <span class="metric-pill">{{ row.disk_percent }}%</span>
+                                </td>
+                                <td>{{ format_uptime(row.uptime_seconds) }}</td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="6" class="empty-state">
+                                    <div class="empty-state-content">
+                                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                            <circle cx="12" cy="12" r="10"></circle>
+                                            <line x1="12" y1="8" x2="12" y2="12"></line>
+                                            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                                        </svg>
+                                        <h3>No Historical Metrics Found</h3>
+                                        <p>The SQLite database is currently empty. Visit the dashboard or call <code>/metrics</code> to begin recording snapshots.</p>
+                                        <a href="{{ url_for('dashboard') }}" class="btn btn-primary btn-sm">Go to Dashboard</a>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Initialize canvas chart on history page load
+    document.addEventListener('DOMContentLoaded', function() {
+        if (typeof renderHistoryChart === 'function') {
+            renderHistoryChart({{ limit }});
+        }
+    });
+</script>
+{% endblock %}

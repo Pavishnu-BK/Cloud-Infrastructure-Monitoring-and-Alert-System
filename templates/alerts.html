@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+
+{% block title %}Alerts | Cloud Infrastructure Monitoring{% endblock %}
+
+{% block content %}
+<div class="alerts-page">
+    <div class="page-header">
+        <div class="header-info">
+            <h1 class="page-title">Automated Incident &amp; Alert Center</h1>
+            <p class="page-subtitle">Deduplicated event lifecycle tracking with automatic resolution</p>
+        </div>
+        <div class="header-actions">
+            <a href="{{ url_for('settings_page') }}" class="btn btn-secondary">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="3"></circle>
+                    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                </svg>
+                Configure Thresholds
+            </a>
+        </div>
+    </div>
+
+    <!-- Alert Statistics Cards -->
+    <div class="stats-overview-grid">
+        <div class="stat-card">
+            <span class="stat-number">{{ stats.total }}</span>
+            <span class="stat-label">Total Alert Records</span>
+        </div>
+        <div class="stat-card stat-active">
+            <span class="stat-number stat-danger-text">{{ stats.active }}</span>
+            <span class="stat-label">Active Alerts</span>
+        </div>
+        <div class="stat-card stat-resolved">
+            <span class="stat-number stat-success-text">{{ stats.resolved }}</span>
+            <span class="stat-label">Auto-Resolved</span>
+        </div>
+        <div class="stat-card">
+            <span class="stat-number stat-critical-text">{{ stats.critical }}</span>
+            <span class="stat-label">Critical Severity</span>
+        </div>
+        <div class="stat-card">
+            <span class="stat-number stat-warning-text">{{ stats.warning }}</span>
+            <span class="stat-label">Warning Severity</span>
+        </div>
+    </div>
+
+    <!-- Filter Buttons & Alert Lifecycle Info -->
+    <div class="alerts-control-bar">
+        <div class="filter-tabs">
+            <a href="{{ url_for('alerts_page') }}" class="tab-btn {% if not current_filter %}active{% endif %}">
+                All Alerts ({{ stats.total }})
+            </a>
+            <a href="{{ url_for('alerts_page', status='Active') }}" class="tab-btn {% if current_filter == 'Active' %}active{% endif %}">
+                Active Only ({{ stats.active }})
+            </a>
+            <a href="{{ url_for('alerts_page', status='Resolved') }}" class="tab-btn {% if current_filter == 'Resolved' %}active{% endif %}">
+                Resolved Only ({{ stats.resolved }})
+            </a>
+        </div>
+        <div class="lifecycle-note">
+            <span class="info-dot"></span>
+            <span>Alerts auto-resolve when metric values return below configured limits.</span>
+        </div>
+    </div>
+
+    <!-- Alerts Table -->
+    <div class="content-section">
+        <div class="table-card">
+            <div class="table-responsive">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Alert ID</th>
+                            <th>Severity</th>
+                            <th>Metric Name</th>
+                            <th>Measured Value</th>
+                            <th>Configured Threshold</th>
+                            <th>Status</th>
+                            <th>Triggered At</th>
+                            <th>Resolved At</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if alerts %}
+                            {% for a in alerts %}
+                            <tr class="alert-row-{{ a.status | lower }}">
+                                <td><span class="code-id">#{{ a.id }}</span></td>
+                                <td>
+                                    <span class="badge badge-{{ a.severity | lower }}">
+                                        {{ a.severity }}
+                                    </span>
+                                </td>
+                                <td><strong>{{ a.metric_name }}</strong></td>
+                                <td>
+                                    <span class="metric-pill pill-danger">{{ a.metric_value }}%</span>
+                                </td>
+                                <td>{{ a.threshold_value }}%</td>
+                                <td>
+                                    <span class="status-pill status-pill-{{ a.status | lower }}">
+                                        {{ a.status }}
+                                    </span>
+                                </td>
+                                <td>{{ a.created_at }}</td>
+                                <td>
+                                    {% if a.resolved_at %}
+                                        <span class="resolved-stamp">{{ a.resolved_at }}</span>
+                                    {% else %}
+                                        <span class="active-pulse-text">Ongoing</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="8" class="empty-state">
+                                    <div class="empty-state-content">
+                                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                                            <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                                        </svg>
+                                        <h3>No Alerts Found</h3>
+                                        <p>
+                                            {% if current_filter == 'Active' %}
+                                                All systems are nominal! No active alerts are currently firing.
+                                            {% elif current_filter == 'Resolved' %}
+                                                No resolved alerts have been logged yet.
+                                            {% else %}
+                                                No alert events have been triggered. All metrics remain within normal thresholds.
+                                            {% endif %}
+                                        </p>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
