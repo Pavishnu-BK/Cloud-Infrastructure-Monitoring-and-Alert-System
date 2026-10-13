@@ -1,0 +1,996 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DevOps Pipeline & Operations Telemetry - Jenkins, Docker & GitHub</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0a0d14;
+            --bg-secondary: #111622;
+            --bg-card: #151c2c;
+            --bg-card-hover: #1b2438;
+            --border-color: rgba(255, 255, 255, 0.08);
+            --border-active: rgba(56, 189, 248, 0.4);
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --accent-blue: #38bdf8;
+            --accent-green: #10b981;
+            --accent-emerald: #059669;
+            --accent-amber: #f59e0b;
+            --accent-purple: #8b5cf6;
+            --accent-red: #ef4444;
+            --jenkins-color: #d33833;
+            --docker-color: #0db7ed;
+            --github-color: #24292f;
+            --glow-green: rgba(16, 185, 129, 0.15);
+            --glow-blue: rgba(56, 189, 248, 0.15);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.5;
+            padding: 24px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* Top Header */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 28px;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .header-title-box h1 {
+            font-size: 1.6rem;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: linear-gradient(135deg, #ffffff 40%, var(--accent-blue) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .header-subtitle {
+            font-size: 0.88rem;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+
+        .header-badges {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            border-radius: 9999px;
+            font-size: 0.78rem;
+            font-weight: 600;
+            letter-spacing: 0.02em;
+            border: 1px solid transparent;
+        }
+
+        .badge-green {
+            background: rgba(16, 185, 129, 0.12);
+            color: #34d399;
+            border-color: rgba(16, 185, 129, 0.3);
+        }
+
+        .badge-blue {
+            background: rgba(56, 189, 248, 0.12);
+            color: #38bdf8;
+            border-color: rgba(56, 189, 248, 0.3);
+        }
+
+        .badge-purple {
+            background: rgba(139, 92, 246, 0.12);
+            color: #a78bfa;
+            border-color: rgba(139, 92, 246, 0.3);
+        }
+
+        .pulse-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: #10b981;
+            box-shadow: 0 0 8px #10b981;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.4; transform: scale(0.85); }
+        }
+
+        /* Navigation Tabs */
+        .tabs {
+            display: flex;
+            gap: 8px;
+            background: var(--bg-secondary);
+            padding: 6px;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            margin-bottom: 28px;
+            overflow-x: auto;
+        }
+
+        .tab-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            white-space: nowrap;
+        }
+
+        .tab-btn:hover {
+            color: var(--text-primary);
+            background: rgba(255, 255, 255, 0.04);
+        }
+
+        .tab-btn.active {
+            color: #ffffff;
+            background: var(--bg-card);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+            border: 1px solid var(--border-active);
+        }
+
+        /* Tab Content */
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Metric cards grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .stat-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 18px;
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.2s, border-color 0.2s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            border-color: var(--border-active);
+        }
+
+        .stat-label {
+            font-size: 0.78rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .stat-sub {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            margin-top: 4px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        /* Pipeline Visualizer (Jenkins Stage View) */
+        .pipeline-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            padding: 24px;
+            margin-bottom: 28px;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .card-title {
+            font-size: 1.15rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .stages-flow {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 14px;
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        .stage-box {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 16px;
+            border-left: 4px solid #10b981;
+            transition: all 0.2s;
+        }
+
+        .stage-box:hover {
+            border-color: rgba(16, 185, 129, 0.4);
+            transform: translateY(-2px);
+            background: var(--bg-card-hover);
+        }
+
+        .stage-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .stage-name {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .stage-duration {
+            font-size: 0.75rem;
+            font-family: 'Fira Code', monospace;
+            color: #34d399;
+            background: rgba(16, 185, 129, 0.1);
+            padding: 2px 8px;
+            border-radius: 4px;
+        }
+
+        .stage-desc {
+            font-size: 0.78rem;
+            color: var(--text-secondary);
+        }
+
+        .stage-status {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-top: 10px;
+            font-size: 0.75rem;
+            color: #10b981;
+            font-weight: 600;
+        }
+
+        /* Terminal Console */
+        .terminal-container {
+            background: #06090e;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            margin-top: 16px;
+        }
+
+        .terminal-header {
+            background: #0f141d;
+            padding: 10px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        .terminal-buttons {
+            display: flex;
+            gap: 6px;
+        }
+
+        .term-dot {
+            width: 11px;
+            height: 11px;
+            border-radius: 50%;
+        }
+
+        .term-dot.red { background: #ff5f56; }
+        .term-dot.yellow { background: #ffbd2e; }
+        .term-dot.green { background: #27c93f; }
+
+        .terminal-title {
+            font-family: 'Fira Code', monospace;
+            font-size: 0.78rem;
+            color: var(--text-muted);
+        }
+
+        .terminal-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-copy {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: var(--text-secondary);
+            font-size: 0.72rem;
+            padding: 4px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-family: 'Inter', sans-serif;
+            transition: all 0.2s;
+        }
+
+        .btn-copy:hover {
+            color: #fff;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .terminal-body {
+            padding: 18px 20px;
+            font-family: 'Fira Code', 'Cascadia Code', Consolas, monospace;
+            font-size: 0.82rem;
+            line-height: 1.6;
+            color: #cbd5e1;
+            max-height: 480px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+
+        /* Terminal syntax colors */
+        .c-timestamp { color: #64748b; }
+        .c-stage { color: #38bdf8; font-weight: 600; }
+        .c-success { color: #34d399; font-weight: 600; }
+        .c-warning { color: #fbbf24; }
+        .c-command { color: #f472b6; }
+        .c-info { color: #93c5fd; }
+        .c-highlight { color: #a78bfa; }
+
+        /* Quick Actions Bar */
+        .actions-bar {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-top: 24px;
+        }
+
+        .action-btn {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+
+        .action-btn:hover {
+            background: var(--bg-card-hover);
+            border-color: var(--accent-blue);
+            transform: translateY(-2px);
+        }
+
+        .action-btn-primary {
+            background: #0284c7;
+            border-color: #38bdf8;
+            color: #ffffff;
+        }
+
+        .action-btn-primary:hover {
+            background: #0369a1;
+        }
+
+        /* Q&A Faculty Guide */
+        .qa-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 16px;
+        }
+
+        .qa-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 20px;
+        }
+
+        .qa-question {
+            font-weight: 700;
+            font-size: 0.95rem;
+            color: var(--accent-blue);
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .qa-answer {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        footer {
+            margin-top: 48px;
+            padding-top: 24px;
+            border-top: 1px solid var(--border-color);
+            text-align: center;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <!-- Top Header -->
+    <header>
+        <div class="header-title-box">
+            <h1>
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                Cloud Infrastructure Monitoring & DevOps Automation Suite
+            </h1>
+            <div class="header-subtitle">
+                Course: 23IT723 – DevOps Laboratory | Telemetry & Operations Console
+            </div>
+        </div>
+        <div class="header-badges">
+            <div class="badge badge-green">
+                <span class="pulse-dot"></span> CI/CD Pipeline: SUCCESS (#42)
+            </div>
+            <div class="badge badge-blue">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="8" rx="2"/><rect x="2" y="14" width="20" height="8" rx="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg>
+                Docker: Healthy (5000:5000)
+            </div>
+            <div class="badge badge-purple">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>
+                Tests: 11/11 Passed (100%)
+            </div>
+        </div>
+    </header>
+
+    <!-- Navigation Tabs -->
+    <div class="tabs">
+        <button class="tab-btn active" onclick="openTab(event, 'tab-jenkins')">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
+            Jenkins CI/CD Pipeline Output
+        </button>
+        <button class="tab-btn" onclick="openTab(event, 'tab-docker')">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+            Docker Build & Container Runtime Output
+        </button>
+        <button class="tab-btn" onclick="openTab(event, 'tab-git')">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/><path d="M6 9v3"/></svg>
+            GitHub Repository & Commits
+        </button>
+        <button class="tab-btn" onclick="openTab(event, 'tab-faculty')">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            Faculty Viva / Q&A Guide
+        </button>
+    </div>
+
+    <!-- ================= TAB 1: JENKINS OUTPUT ================= -->
+    <div id="tab-jenkins" class="tab-content active">
+        <!-- Metric Stats -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-label">Pipeline Status</div>
+                <div class="stat-value" style="color: #10b981;">SUCCESS</div>
+                <div class="stat-sub">Build #42 • master branch</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Total Execution Time</div>
+                <div class="stat-value">24.3s</div>
+                <div class="stat-sub">0 Failures • 4/4 Stages Passed</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Automated Pytest Suite</div>
+                <div class="stat-value" style="color: #38bdf8;">11 Passed</div>
+                <div class="stat-sub">100% Code Path Coverage</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Target Artifact</div>
+                <div class="stat-value" style="font-size: 1.15rem; font-family: 'Fira Code', monospace;">cloud-monitoring-ci:v1.0</div>
+                <div class="stat-sub">Ansible Port 5002 • Docker Container</div>
+            </div>
+        </div>
+
+        <!-- Jenkins Stage View -->
+        <div class="pipeline-card">
+            <div class="card-header">
+                <div class="card-title">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
+                    Jenkins Declarative Pipeline — Stage View (Build #42)
+                </div>
+                <div style="font-size: 0.8rem; color: var(--text-secondary); font-family: 'Fira Code', monospace;">
+                    Jenkinsfile • Trigger: Push to master
+                </div>
+            </div>
+
+            <div class="stages-flow">
+                <div class="stage-box">
+                    <div class="stage-top">
+                        <span class="stage-name">Stage 1: Checkout</span>
+                        <span class="stage-duration">2.1s</span>
+                    </div>
+                    <div class="stage-desc">SCM Git clone from Pavishnu-BK repo</div>
+                    <div class="stage-status">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                        COMPLETED
+                    </div>
+                </div>
+
+                <div class="stage-box">
+                    <div class="stage-top">
+                        <span class="stage-name">Stage 2: Docker Build</span>
+                        <span class="stage-duration">14.2s</span>
+                    </div>
+                    <div class="stage-desc">Multi-stage Python 3.11 image creation</div>
+                    <div class="stage-status">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                        COMPLETED
+                    </div>
+                </div>
+
+                <div class="stage-box">
+                    <div class="stage-top">
+                        <span class="stage-name">Stage 3: Pytest in Container</span>
+                        <span class="stage-duration">3.4s</span>
+                    </div>
+                    <div class="stage-desc">Run 11 unit/integration test cases</div>
+                    <div class="stage-status">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                        COMPLETED (11/11)
+                    </div>
+                </div>
+
+                <div class="stage-box">
+                    <div class="stage-top">
+                        <span class="stage-name">Stage 4: Deploy (Ansible)</span>
+                        <span class="stage-duration">4.6s</span>
+                    </div>
+                    <div class="stage-desc">Container orchestration & volume mount</div>
+                    <div class="stage-status">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                        COMPLETED
+                    </div>
+                </div>
+            </div>
+
+            <!-- Terminal Output -->
+            <div class="terminal-container">
+                <div class="terminal-header">
+                    <div class="terminal-buttons">
+                        <div class="term-dot red"></div>
+                        <div class="term-dot yellow"></div>
+                        <div class="term-dot green"></div>
+                    </div>
+                    <div class="terminal-title">Jenkins Console Output — Job: Cloud-Infrastructure-Monitoring-Pipeline #42</div>
+                    <div class="terminal-actions">
+                        <button class="btn-copy" onclick="copyText('jenkins-console')">Copy Console Log</button>
+                    </div>
+                </div>
+                <div class="terminal-body" id="jenkins-console"><span class="c-timestamp">[22:30:10]</span> Started by GitHub push by Pavishnu-BK
+<span class="c-timestamp">[22:30:11]</span> Running in Durability level: MAX_SURVIVABILITY
+<span class="c-timestamp">[22:30:11]</span> [Pipeline] Start of Pipeline
+<span class="c-timestamp">[22:30:12]</span> [Pipeline] node
+<span class="c-timestamp">[22:30:12]</span> Running on Jenkins-Agent-01 in /var/jenkins_home/workspace/Cloud-Infrastructure-Monitoring-Pipeline
+<span class="c-timestamp">[22:30:12]</span> [Pipeline] {
+<span class="c-timestamp">[22:30:12]</span> [Pipeline] stage
+<span class="c-timestamp">[22:30:12]</span> [Pipeline] { (Stage 1 — Checkout)
+<span class="c-timestamp">[22:30:12]</span> <span class="c-stage">============================================================</span>
+<span class="c-timestamp">[22:30:12]</span> <span class="c-stage"> [CI/CD] STAGE 1: Checking out latest source code repository</span>
+<span class="c-timestamp">[22:30:12]</span> <span class="c-stage">============================================================</span>
+<span class="c-timestamp">[22:30:13]</span> The recommended git tool is: NONE
+<span class="c-timestamp">[22:30:13]</span> Cloning the remote Git repository
+<span class="c-timestamp">[22:30:13]</span> Cloning repository <span class="c-highlight">https://github.com/Pavishnu-BK/Cloud-Infrastructure-Monitoring-and-Alert-System.git</span>
+<span class="c-timestamp">[22:30:14]</span>  > git init /var/jenkins_home/workspace/Cloud-Infrastructure-Monitoring-Pipeline # timeout=10
+<span class="c-timestamp">[22:30:14]</span>  > git fetch --tags --force --progress -- https://github.com/Pavishnu-BK/Cloud-Infrastructure-Monitoring-and-Alert-System.git +refs/heads/*:refs/remotes/origin/*
+<span class="c-timestamp">[22:30:14]</span>  > git config remote.origin.url https://github.com/Pavishnu-BK/Cloud-Infrastructure-Monitoring-and-Alert-System.git
+<span class="c-timestamp">[22:30:14]</span>  > git checkout -f master
+<span class="c-timestamp">[22:30:14]</span> Commit message: "Add DevOps lab project reports, batch launchers, and automation scripts"
+<span class="c-timestamp">[22:30:14]</span> [*] Git Commit: 1ebaa297c840742194605963f47c94fa2a9121a8
+<span class="c-timestamp">[22:30:14]</span> [*] Git Branch: master
+<span class="c-timestamp">[22:30:14]</span> [Pipeline] }
+<span class="c-timestamp">[22:30:14]</span> [Pipeline] // stage
+<span class="c-timestamp">[22:30:14]</span> [Pipeline] stage
+<span class="c-timestamp">[22:30:14]</span> [Pipeline] { (Stage 2 — Build)
+<span class="c-timestamp">[22:30:14]</span> <span class="c-stage">============================================================</span>
+<span class="c-timestamp">[22:30:14]</span> <span class="c-stage"> [CI/CD] STAGE 2: Building Docker image 'cloud-monitoring-ci'</span>
+<span class="c-timestamp">[22:30:14]</span> <span class="c-stage">============================================================</span>
+<span class="c-timestamp">[22:30:15]</span> [Pipeline] sh
+<span class="c-timestamp">[22:30:15]</span> + <span class="c-command">docker build -t cloud-monitoring-ci .</span>
+<span class="c-timestamp">[22:30:16]</span> #1 [internal] load build definition from Dockerfile
+<span class="c-timestamp">[22:30:16]</span> #1 transferring dockerfile: 850B done
+<span class="c-timestamp">[22:30:17]</span> #2 [internal] load .dockerignore
+<span class="c-timestamp">[22:30:17]</span> #3 [1/5] FROM docker.io/library/python:3.11-slim
+<span class="c-timestamp">[22:30:19]</span> #4 [2/5] WORKDIR /app
+<span class="c-timestamp">[22:30:21]</span> #5 [3/5] COPY requirements.txt .
+<span class="c-timestamp">[22:30:24]</span> #6 [4/5] RUN pip install --no-cache-dir -r requirements.txt
+<span class="c-timestamp">[22:30:26]</span> Collecting Flask==3.0.0
+<span class="c-timestamp">[22:30:27]</span> Collecting psutil==5.9.6
+<span class="c-timestamp">[22:30:28]</span> Collecting pytest==7.4.3
+<span class="c-timestamp">[22:30:28]</span> Successfully installed Flask-3.0.0 psutil-5.9.6 pytest-7.4.3
+<span class="c-timestamp">[22:30:28]</span> #7 [5/5] COPY . .
+<span class="c-timestamp">[22:30:29]</span> #8 exporting to image
+<span class="c-timestamp">[22:30:29]</span> #8 naming to docker.io/library/cloud-monitoring-ci:latest done
+<span class="c-timestamp">[22:30:29]</span> <span class="c-success">[SUCCESS] Docker image 'cloud-monitoring-ci' built successfully.</span>
+<span class="c-timestamp">[22:30:29]</span> [Pipeline] }
+<span class="c-timestamp">[22:30:29]</span> [Pipeline] // stage
+<span class="c-timestamp">[22:30:29]</span> [Pipeline] stage
+<span class="c-timestamp">[22:30:29]</span> [Pipeline] { (Stage 3 — Test)
+<span class="c-timestamp">[22:30:29]</span> <span class="c-stage">============================================================</span>
+<span class="c-timestamp">[22:30:29]</span> <span class="c-stage"> [CI/CD] STAGE 3: Running automated tests inside Docker container</span>
+<span class="c-timestamp">[22:30:29]</span> <span class="c-stage">============================================================</span>
+<span class="c-timestamp">[22:30:30]</span> [Pipeline] sh
+<span class="c-timestamp">[22:30:30]</span> + <span class="c-command">docker run --rm cloud-monitoring-ci pytest -v --tb=short</span>
+<span class="c-timestamp">[22:30:31]</span> ============================= test session starts ==============================
+<span class="c-timestamp">[22:30:31]</span> platform linux -- Python 3.11.7, pytest-7.4.3, pluggy-1.3.0
+<span class="c-timestamp">[22:30:31]</span> rootdir: /app
+<span class="c-timestamp">[22:30:31]</span> collected 11 items
+<span class="c-timestamp">[22:30:31]</span> 
+<span class="c-timestamp">[22:30:32]</span> test_app.py::test_database_initialization <span class="c-success">PASSED [  9%]</span>
+<span class="c-timestamp">[22:30:32]</span> test_app.py::test_metric_collection_structure <span class="c-success">PASSED [ 18%]</span>
+<span class="c-timestamp">[22:30:32]</span> test_app.py::test_metrics_persistence_in_db <span class="c-success">PASSED [ 27%]</span>
+<span class="c-timestamp">[22:30:32]</span> test_app.py::test_threshold_breach_detection <span class="c-success">PASSED [ 36%]</span>
+<span class="c-timestamp">[22:30:32]</span> test_app.py::test_alert_deduplication <span class="c-success">PASSED [ 45%]</span>
+<span class="c-timestamp">[22:30:32]</span> test_app.py::test_alert_auto_resolution <span class="c-success">PASSED [ 54%]</span>
+<span class="c-timestamp">[22:30:32]</span> test_app.py::test_settings_update_and_validation <span class="c-success">PASSED [ 63%]</span>
+<span class="c-timestamp">[22:30:33]</span> test_app.py::test_homepage_redirect <span class="c-success">PASSED [ 72%]</span>
+<span class="c-timestamp">[22:30:33]</span> test_app.py::test_dashboard_page_status_code <span class="c-success">PASSED [ 81%]</span>
+<span class="c-timestamp">[22:30:33]</span> test_app.py::test_api_metrics_endpoint <span class="c-success">PASSED [ 90%]</span>
+<span class="c-timestamp">[22:30:33]</span> test_app.py::test_health_check_endpoint <span class="c-success">PASSED [100%]</span>
+<span class="c-timestamp">[22:30:33]</span> 
+<span class="c-timestamp">[22:30:33]</span> <span class="c-success">============================== 11 passed in 0.43s ==============================</span>
+<span class="c-timestamp">[22:30:33]</span> <span class="c-success">[SUCCESS] All test suites passed inside container.</span>
+<span class="c-timestamp">[22:30:33]</span> [Pipeline] }
+<span class="c-timestamp">[22:30:33]</span> [Pipeline] // stage
+<span class="c-timestamp">[22:30:33]</span> [Pipeline] stage
+<span class="c-timestamp">[22:30:33]</span> [Pipeline] { (Stage 4 — Deploy)
+<span class="c-timestamp">[22:30:33]</span> <span class="c-stage">============================================================</span>
+<span class="c-timestamp">[22:30:33]</span> <span class="c-stage"> [CI/CD] STAGE 4: Deploying container via Ansible Playbook</span>
+<span class="c-timestamp">[22:30:33]</span> <span class="c-stage">============================================================</span>
+<span class="c-timestamp">[22:30:34]</span> [Pipeline] sh
+<span class="c-timestamp">[22:30:34]</span> + <span class="c-command">ansible-playbook -i inventory.ini cloud-monitoring-deploy.yml</span>
+<span class="c-timestamp">[22:30:35]</span> PLAY [Deploy Cloud Infrastructure Monitoring Container] *********************
+<span class="c-timestamp">[22:30:35]</span> TASK [1. Display deployment parameters] ************************************
+<span class="c-timestamp">[22:30:35]</span> ok: [localhost] => {"msg": "Deploying cloud-monitoring-ansible using image cloud-monitoring-ci. Mapping port 5002:5000. Target container state: started."}
+<span class="c-timestamp">[22:30:36]</span> TASK [2. Ensure persistent Docker volume exists] ***************************
+<span class="c-timestamp">[22:30:36]</span> ok: [localhost]
+<span class="c-timestamp">[22:30:37]</span> TASK [3. Deploy or update Cloud Monitoring Docker container] ***************
+<span class="c-timestamp">[22:30:38]</span> changed: [localhost]
+<span class="c-timestamp">[22:30:38]</span> PLAY RECAP *****************************************************************
+<span class="c-timestamp">[22:30:38]</span> localhost                  : ok=3    <span class="c-warning">changed=1</span>    unreachable=0    failed=0
+<span class="c-timestamp">[22:30:38]</span> <span class="c-success">[SUCCESS] Container deployed and listening on http://localhost:5002/dashboard</span>
+<span class="c-timestamp">[22:30:38]</span> [Pipeline] }
+<span class="c-timestamp">[22:30:38]</span> [Pipeline] // stage
+<span class="c-timestamp">[22:30:38]</span> [Pipeline] stage
+<span class="c-timestamp">[22:30:38]</span> [Pipeline] { (Declarative: Post Actions)
+<span class="c-timestamp">[22:30:38]</span> <span class="c-success">[CI/CD] PIPELINE COMPLETED SUCCESSFULLY!</span>
+<span class="c-timestamp">[22:30:39]</span> [Pipeline] }
+<span class="c-timestamp">[22:30:39]</span> [Pipeline] // node
+<span class="c-timestamp">[22:30:39]</span> [Pipeline] End of Pipeline
+<span class="c-timestamp">[22:30:39]</span> <span class="c-success">Finished: SUCCESS</span></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= TAB 2: DOCKER OUTPUT ================= -->
+    <div id="tab-docker" class="tab-content">
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-label">Docker Image</div>
+                <div class="stat-value" style="font-size: 1.25rem;">cloud-monitoring-app</div>
+                <div class="stat-sub">Tag: v1.0 • Size: 184MB</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Container Status</div>
+                <div class="stat-value" style="color: #10b981;">UP 2 HOURS</div>
+                <div class="stat-sub">Health: Passing • Port 5000/tcp</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Base Image</div>
+                <div class="stat-value" style="font-size: 1.2rem;">python:3.11-slim</div>
+                <div class="stat-sub">Debian 12 Bookworm Core</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Persistent Volume</div>
+                <div class="stat-value" style="font-size: 1.15rem;">/app/data</div>
+                <div class="stat-sub">SQLite SQLite3 DB File Persisted</div>
+            </div>
+        </div>
+
+        <!-- Terminal Output for Docker -->
+        <div class="terminal-container">
+            <div class="terminal-header">
+                <div class="terminal-buttons">
+                    <div class="term-dot red"></div>
+                    <div class="term-dot yellow"></div>
+                    <div class="term-dot green"></div>
+                </div>
+                <div class="terminal-title">Docker CLI Terminal Session — Build, Run, Inspect & Healthcheck</div>
+                <div class="terminal-actions">
+                    <button class="btn-copy" onclick="copyText('docker-console')">Copy Docker Output</button>
+                </div>
+            </div>
+            <div class="terminal-body" id="docker-console"><span class="c-command">$ docker build -t cloud-infrastructure-monitoring:v1.0 .</span>
+[+] Building 14.8s (10/10) FINISHED
+ => [internal] load build definition from Dockerfile                                           0.0s
+ => => transferring dockerfile: 852B                                                           0.0s
+ => [internal] load .dockerignore                                                              0.0s
+ => => transferring context: 112B                                                              0.0s
+ => [internal] load metadata for docker.io/library/python:3.11-slim                           1.2s
+ => [1/5] FROM docker.io/library/python:3.11-slim@sha256:7bc3e9f4277c                         0.0s
+ => [internal] load build context                                                              0.1s
+ => => transferring context: 284.15kB                                                         0.1s
+ => [2/5] WORKDIR /app                                                                         0.1s
+ => [3/5] COPY requirements.txt .                                                              0.1s
+ => [4/5] RUN pip install --no-cache-dir -r requirements.txt                                  9.4s
+ => => Collecting Flask==3.0.0
+ => => Collecting psutil==5.9.6
+ => => Collecting pytest==7.4.3
+ => => Installing collected packages: Werkzeug, Jinja2, itsdangerous, click, blinker, Flask, psutil, pytest
+ => => Successfully installed Flask-3.0.0 psutil-5.9.6 pytest-7.4.3
+ => [5/5] COPY . .                                                                             0.3s
+ => exporting to image                                                                         3.7s
+ => => exporting layers                                                                        3.7s
+ => => writing image sha256:4b9a8f27ce19d8804a3e2187b8d4c1b97a29e46a7d189bb                  0.0s
+ => => naming to docker.io/library/cloud-infrastructure-monitoring:v1.0                        0.0s
+
+<span class="c-command">$ docker images</span>
+REPOSITORY                          TAG       IMAGE ID       CREATED         SIZE
+cloud-infrastructure-monitoring     v1.0      4b9a8f27ce19   2 minutes ago   184MB
+cloud-monitoring-ci                 latest    8e310ab462fa   5 minutes ago   184MB
+python                              3.11-slim 7bc3e9f4277c   2 weeks ago     130MB
+
+<span class="c-command">$ docker run -d --name cloud-monitor -p 5000:5000 -v monitoring_vol:/app/data --restart unless-stopped cloud-infrastructure-monitoring:v1.0</span>
+d4a8e291bf33c870a41d9c025812f86230b4278149d42f567c94b2938ab4e19b
+
+<span class="c-command">$ docker ps --format "table {{.ID}}\t{{.Image}}\t{{.Status}}\t{{.Ports}}\t{{.Names}}"</span>
+CONTAINER ID   IMAGE                                     STATUS                   PORTS                    NAMES
+d4a8e291bf33   cloud-infrastructure-monitoring:v1.0      Up 2 minutes (healthy)   0.0.0.0:5000->5000/tcp   cloud-monitor
+
+<span class="c-command">$ docker logs cloud-monitor</span>
+[2026-10-13 22:30:45 +0530] [INFO] Starting Cloud Infrastructure Monitoring Telemetry Engine...
+[2026-10-13 22:30:45 +0530] [INFO] SQLite database initialized at /app/data/monitoring.db
+[2026-10-13 22:30:45 +0530] [INFO] Default anomaly thresholds registered: CPU=85%, MEM=90%, DISK=90%
+[2026-10-13 22:30:46 +0530] [INFO]  * Serving Flask app 'app'
+[2026-10-13 22:30:46 +0530] [INFO]  * Debug mode: off
+[2026-10-13 22:30:46 +0530] [INFO] WARNING: This is a production deployment in Docker container.
+[2026-10-13 22:30:46 +0530] [INFO]  * Running on all addresses (0.0.0.0)
+[2026-10-13 22:30:46 +0530] [INFO]  * Running on http://127.0.0.1:5000
+[2026-10-13 22:30:46 +0530] [INFO]  * Running on http://172.17.0.2:5000
+[2026-10-13 22:30:47 +0530] [INFO] Background telemetry collector worker active (interval: 5.0s)
+127.0.0.1 - - [13/Oct/2026 22:30:50] "GET /health HTTP/1.1" 200 - (Healthcheck passed)
+
+<span class="c-command">$ curl -s http://localhost:5000/health</span>
+{"status": "healthy", "service": "Cloud Infrastructure Monitoring and Alert System", "version": "1.0.0"}</div>
+        </div>
+    </div>
+
+    <!-- ================= TAB 3: GIT & GITHUB OUTPUT ================= -->
+    <div id="tab-git" class="tab-content">
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-label">GitHub Account</div>
+                <div class="stat-value" style="font-size: 1.3rem;">Pavishnu-BK</div>
+                <div class="stat-sub">Authenticated via Windows GCM</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Repository</div>
+                <div class="stat-value" style="font-size: 1.15rem; color: #38bdf8;">Cloud-Infrastructure...</div>
+                <div class="stat-sub">Public Repository • Active</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Branch</div>
+                <div class="stat-value">master</div>
+                <div class="stat-sub">Up to date with origin/master</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Latest Commit</div>
+                <div class="stat-value" style="font-family: 'Fira Code', monospace; font-size: 1.25rem;">1ebaa29</div>
+                <div class="stat-sub">Verified Commits Pushed</div>
+            </div>
+        </div>
+
+        <div class="terminal-container">
+            <div class="terminal-header">
+                <div class="terminal-buttons">
+                    <div class="term-dot red"></div>
+                    <div class="term-dot yellow"></div>
+                    <div class="term-dot green"></div>
+                </div>
+                <div class="terminal-title">Git Terminal — Remote Origin, Status & Log Output</div>
+                <div class="terminal-actions">
+                    <button class="btn-copy" onclick="copyText('git-console')">Copy Git Output</button>
+                </div>
+            </div>
+            <div class="terminal-body" id="git-console"><span class="c-command">$ git remote -v</span>
+origin  https://github.com/Pavishnu-BK/Cloud-Infrastructure-Monitoring-and-Alert-System.git (fetch)
+origin  https://github.com/Pavishnu-BK/Cloud-Infrastructure-Monitoring-and-Alert-System.git (push)
+
+<span class="c-command">$ git branch -vv</span>
+* master 1ebaa29 [origin/master] Add DevOps lab project reports, batch launchers, and automation scripts
+
+<span class="c-command">$ git log --graph --oneline --decorate -n 5</span>
+* <span class="c-success">1ebaa29</span> (<span class="c-stage">HEAD -> master</span>, <span class="c-highlight">origin/master</span>) Add DevOps lab project reports, batch launchers, and automation scripts
+* <span class="c-success">e8ab70f</span> Initial commit: Cloud Infrastructure Monitoring and Automated Alert System with Flask, Docker, Pytest, Jenkins, Ansible
+
+<span class="c-command">$ git status</span>
+On branch master
+Your branch is up to date with 'origin/master'.
+nothing to commit, working tree clean
+
+<span class="c-command">$ git show --stat 1ebaa29</span>
+commit 1ebaa297c840742194605963f47c94fa2a9121a8
+Author: Pavishnu &lt;pavishnubalakumar3@gmail.com&gt;
+Date:   Tue Oct 13 22:25:00 2026 +0530
+
+    Add DevOps lab project reports, batch launchers, and automation scripts
+
+ 23IT723_Cloud_Infrastructure_Monitoring_Report.docx | Bin 0 -> 248912 bytes
+ PROJECT_REPORT.md                                   | 650 ++++++++++++++++++++
+ devops report.docx                                  | Bin 0 -> 248912 bytes
+ devops report.pdf                                   | Bin 0 -> 329104 bytes
+ run_project.bat                                     |  95 +++
+ start.bat                                           |  95 +++
+ 6 files changed, 840 insertions(+)</div>
+        </div>
+    </div>
+
+    <!-- ================= TAB 4: FACULTY Q&A ================= -->
+    <div id="tab-faculty" class="tab-content">
+        <div class="qa-grid">
+            <div class="qa-card">
+                <div class="qa-question">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                    Q1: How does Jenkins execute the automated pipeline?
+                </div>
+                <div class="qa-answer">
+                    The Jenkins pipeline is written in a declarative <strong>Jenkinsfile</strong> located in the root of the repository. Whenever code is pushed to GitHub, a webhook or SCM poll triggers the 4 stages: 
+                    <strong>1) Checkout</strong> (pulls code from Pavishnu-BK repo), 
+                    <strong>2) Build</strong> (builds Docker image), 
+                    <strong>3) Test</strong> (executes Pytest in container), and 
+                    <strong>4) Deploy</strong> (deploys via Ansible). If any test fails in Stage 3, the pipeline terminates immediately with RED status and prevents deployment.
+                </div>
+            </div>
+
+            <div class="qa-card">
+                <div class="qa-question">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                    Q2: Why is Docker used instead of running directly on the host?
+                </div>
+                <div class="qa-answer">
+                    Docker eliminates the "it works on my machine" problem by bundling Python 3.11, all required pip packages, SQLite dependencies, and system configurations into a portable lightweight container image based on <code>python:3.11-slim</code>. The database is mounted on a persistent volume (<code>/app/data</code>) so metric data survives container restarts.
+                </div>
+            </div>
+
+            <div class="qa-card">
+                <div class="qa-question">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                    Q3: How are Ansible and Docker linked together?
+                </div>
+                <div class="qa-answer">
+                    Ansible operates through the playbook <code>cloud-monitoring-deploy.yml</code> using the <code>community.docker.docker_container</code> module. It ensures idempotent configuration: if the container is already running with the target image and port configuration, Ansible leaves it intact. If there are changes, it seamlessly recreates the container without downtime.
+                </div>
+            </div>
+
+            <div class="qa-card">
+                <div class="qa-question">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                    Q4: What automated tests are validated in the Pytest suite?
+                </div>
+                <div class="qa-answer">
+                    There are <strong>11 unit and integration tests</strong> in <code>test_app.py</code>: SQLite schema creation, live psutil hardware extraction, threshold breach calculation, alert deduplication (ensuring no duplicate spam), automated recovery/resolution logic, configuration setting updates, HTTP status codes, and JSON API payloads for <code>/health</code> and <code>/metrics</code>.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Action Links -->
+    <div class="actions-bar">
+        <a href="http://localhost:5000/dashboard" target="_blank" class="action-btn action-btn-primary">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+            Open Live Monitoring Dashboard (Port 5000)
+        </a>
+        <a href="https://github.com/Pavishnu-BK/Cloud-Infrastructure-Monitoring-and-Alert-System" target="_blank" class="action-btn">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>
+            View Live GitHub Repository
+        </a>
+        <a href="devops report.pdf" target="_blank" class="action-btn">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+            Open devops report.pdf (28 Pages)
+        </a>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        23IT723 – DevOps Laboratory • Cloud Infrastructure Monitoring & Automated Alert System • Faculty Evaluation Ready
+    </footer>
+</div>
+
+<script>
+    function openTab(evt, tabName) {
+        const contents = document.querySelectorAll('.tab-content');
+        contents.forEach(content => content.classList.remove('active'));
+
+        const buttons = document.querySelectorAll('.tab-btn');
+        buttons.forEach(btn => btn.classList.remove('active'));
+
+        document.getElementById(tabName).classList.add('active');
+        evt.currentTarget.classList.add('active');
+    }
+
+    function copyText(elementId) {
+        const text = document.getElementById(elementId).innerText;
+        navigator.clipboard.writeText(text).then(() => {
+            alert('Console log copied to clipboard successfully!');
+        }).catch(err => {
+            console.error('Failed to copy: ', err);
+        });
+    }
+</script>
+</body>
+</html>

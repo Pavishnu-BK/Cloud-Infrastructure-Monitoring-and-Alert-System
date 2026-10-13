@@ -213,6 +213,13 @@ def health_check():
         }), 503
 
 
+@app.route('/pipeline')
+@app.route('/devops')
+def devops_pipeline():
+    """DevOps operations dashboard displaying Jenkins, Docker, and GitHub telemetry."""
+    return render_template('devops_pipeline_dashboard.html')
+
+
 @app.errorhandler(404)
 def not_found_error(error):
     return render_template('base.html', page_error="Page not found (404)"), 404
